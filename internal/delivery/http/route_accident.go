@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/wagaru/Recodar/server/internal/domain"
+	"github.com/wagaru/recodar-rest/internal/domain"
 )
 
 func (delivery *httpDelivery) getAccidents(c *gin.Context) {

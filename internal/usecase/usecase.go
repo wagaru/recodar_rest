@@ -2,18 +2,18 @@ package usecase
 
 import (
 	"context"
+	"time"
 
-	"github.com/wagaru/Recodar/server/internal/config"
-	"github.com/wagaru/Recodar/server/internal/delivery/http/router"
-	"github.com/wagaru/Recodar/server/internal/domain"
-	"github.com/wagaru/Recodar/server/internal/repository"
+	"github.com/wagaru/recodar-rest/internal/config"
+	"github.com/wagaru/recodar-rest/internal/domain"
+	"github.com/wagaru/recodar-rest/internal/repository"
 )
 
 type Usecase interface {
-	// Login
-	HandleUserLogin(session router.Session, info []byte, source string) error
-	GetGoogleOauthURL(session router.Session) string
-	GetGoogleOauthAccessToken(state, code string, session router.Session) (string, error)
+	// auth
+	GetLineOAuthURL() string
+	GetGoogleOAuthURL() string
+	GetGoogleOAuthAccessToken(state, code string) (string, string, time.Time, error)
 
 	// Video
 	StoreVideo(ctx context.Context, info map[string]interface{}) error
@@ -22,6 +22,15 @@ type Usecase interface {
 	StoreAccident(ctx context.Context, accident *domain.Accident) error
 	StoreAccidents(ctx context.Context, accidents []*domain.Accident) error
 	GetAccidents(ctx context.Context, queryFilter *domain.QueryFilter) ([]*domain.Accident, error)
+
+	// User
+	FindUser(ctx context.Context, condition map[string]interface{}) (*domain.User, error)
+	FindUserById(ctx context.Context, IDHex string) (*domain.User, error)
+	StoreUser(ctx context.Context, user *domain.User) (string, error)
+	UpsertUser(ctx context.Context, filter, update map[string]interface{}) (*domain.User, error)
+
+	// Token
+	GenerateJWTToken(ctx context.Context, user *domain.User) (string, error)
 }
 
 type usecase struct {

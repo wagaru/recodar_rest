@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/wagaru/Recodar/server/internal/config"
-	"github.com/wagaru/Recodar/server/internal/domain"
+	"github.com/wagaru/recodar-rest/internal/config"
+	"github.com/wagaru/recodar-rest/internal/domain"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -26,8 +26,11 @@ type Repository interface {
 
 	// User
 	GetUser(ctx context.Context, key string, value interface{}) (*domain.User, error)
-	StoreUser(ctx context.Context, u *domain.User) (interface{}, error)
+	FindUser(ctx context.Context, condition map[string]interface{}) (*domain.User, error)
+	FindUserById(ctx context.Context, IDHex string) (*domain.User, error)
+	StoreUser(ctx context.Context, u *domain.User) (string, error)
 	UpdateUser(ctx context.Context, id string, u *domain.User) error
+	UpsertUser(ctx context.Context, filter map[string]interface{}, update map[string]interface{}) (*domain.User, error)
 
 	// Video
 	StoreVideo(ctx context.Context, v *domain.Video) (interface{}, error)

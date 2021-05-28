@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/wagaru/Recodar/server/internal/config"
-	"github.com/wagaru/Recodar/server/internal/delivery/http/router"
-	"github.com/wagaru/Recodar/server/internal/domain"
-	"github.com/wagaru/Recodar/server/internal/usecase"
+	"github.com/wagaru/recodar-rest/internal/config"
+	"github.com/wagaru/recodar-rest/internal/delivery/http/router"
+	"github.com/wagaru/recodar-rest/internal/domain"
+	"github.com/wagaru/recodar-rest/internal/usecase"
 )
 
 type httpDelivery struct {
@@ -22,39 +22,28 @@ type httpDelivery struct {
 func NewHttpDelivery(usecase usecase.Usecase, config *config.Config) *httpDelivery {
 	return &httpDelivery{
 		usecase: usecase,
-		router:  router.NewRouter(),
+		router:  router.NewRouter(config),
 		config:  config,
 	}
 }
 
 func (delivery *httpDelivery) buildRoute() {
-	router := delivery.router
-
-	login := router.Group("/login")
+	api := delivery.router.Group("/api/v1")
 	{
-		login.GET("/google", delivery.googleLogin)
-		login.GET("/google/callback", delivery.googleLoginCallback)
-	}
-	router.GET("/me", delivery.me)
-	router.GET("/logout", delivery.logout)
-
-	api := router.Group("/api/v1")
-	{
-		api.GET("/accidents", delivery.getAccidents)
-		authRequire := api.Use(router.Middlewares["AuthRequired"])
+		auth := api.Group("/auth")
 		{
-			authRequire.POST("/accidents", delivery.postAccidents)
+			auth.GET("/line", delivery.authLine)
+			auth.GET("/line/callback", delivery.authLineCallback)
+			auth.GET("/google", delivery.authGoogle)
+			auth.GET("/google/callback", delivery.authGoogleCallback)
+		}
+
+		authRequired := api.Use(delivery.router.Middlewares["AuthRequired"])
+		{
+			authRequired.GET("/accidents", delivery.getAccidents)
+			// authRequire.POST("/accidents", delivery.postAccidents)
 		}
 	}
-
-	//router.GET("/genAccidents", delivery.genAccidents)
-	router.Static("/static", "./../client/build/static")
-	router.StaticFile("/manifest.json", "./../client/build/manifest.json")
-	router.StaticFile("/logo192.png", "./../client/build/logo192.png")
-	router.NoRoute(func(c *gin.Context) {
-		fmt.Printf("No route %s", c.Request.URL)
-		c.File("./../client/build/index.html")
-	})
 }
 
 func (delivery *httpDelivery) Run(port uint16) {

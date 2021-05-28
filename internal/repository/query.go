@@ -3,7 +3,7 @@ package repository
 import (
 	"time"
 
-	"github.com/wagaru/Recodar/server/internal/domain"
+	"github.com/wagaru/recodar-rest/internal/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

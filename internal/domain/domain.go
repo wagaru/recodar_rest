@@ -9,11 +9,17 @@ import (
 type User struct {
 	ID            primitive.ObjectID `json:"-" bson:"_id,omitempty"`
 	Email         string             `json:"email"`
-	Name          string             `json:"name"`
-	Picture       string             `json:"picture"`
-	CreatedAt     time.Time          `json:"created_at"`
-	UpdatedAt     *time.Time         `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
+	Name          string             `json:"name,omitempty"`
+	Password      string             `json:"password,omitempty"`
+	Picture       string             `json:"picture,omitempty"`
+	UpdatedAt     time.Time          `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
 	BindingSource string             `json:"binding_source" bson:"binding_source"`
+	AccessToken   string             `json:"access_token" bson:"access_token,omitempty"`
+	RefreshToken  string             `json:"refresh_token" bson:"refresh_token,omitempty"`
+	JWT           string             `json:"jwt,omitempty"`
+	LineUserID    string             `json:"line_user_id" bson:"line_user_id,omitempty"`
+	GoogleUserID  string             `json:"google_user_id" bson:"google_user_id,omitempty"`
+	// Expired
 }
 
 type Accident struct {

@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/wagaru/Recodar/server/internal/domain"
+	"github.com/wagaru/recodar-rest/internal/domain"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )

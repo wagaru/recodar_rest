@@ -8,6 +8,10 @@ type Config struct {
 	GoogleClientID         string `mapstructure:"GOOGLE_CLIENT_ID"`
 	GoogleClientSecret     string `mapstructure:"GOOGLE_CLIENT_SECRET"`
 	GoogleOauthRedirectURL string `mapstructure:"GOOGLE_OAUTH_REDIRECT_URL"`
+	LineLoginClientID      string `mapstructure:"LINE_LOGIN_CLIENT_ID"`
+	LineLoginClientSecret  string `mapstructure:"LINE_LOGIN_CLIENT_SECRET"`
+	LineLoginRedirectURL   string `mapstructure:"LINE_LOGIN_REDIRECT_URL"`
+	JwtSecret              string `mapstructure:"JWT_SECRET"`
 }
 
 func LoadConfig(path, configName, configType string) (*Config, error) {

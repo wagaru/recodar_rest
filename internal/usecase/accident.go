@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/wagaru/Recodar/server/internal/domain"
+	"github.com/wagaru/recodar-rest/internal/domain"
 )
 
 func (u *usecase) StoreAccident(ctx context.Context, accident *domain.Accident) error {

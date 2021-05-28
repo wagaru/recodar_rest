@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/wagaru/Recodar/server/internal/domain"
+	"github.com/wagaru/recodar-rest/internal/domain"
 )
 
 func (repo *mongoRepo) StoreVideo(ctx context.Context, v *domain.Video) (interface{}, error) {
