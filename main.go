@@ -14,7 +14,7 @@ func main() {
 	log.Printf("Init...")
 
 	// Load config
-	config, err := config.LoadConfig("./conf", "app", "env")
+	config, err := config.LoadConfig("./", "app", "env")
 	if err != nil {
 		fmt.Printf("Load config failed: %v", err)
 	}
