@@ -7,6 +7,8 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/wagaru/recodar-rest/internal/config"
 	"github.com/wagaru/recodar-rest/internal/domain"
@@ -23,6 +25,7 @@ func NewRouter(config *config.Config) *Router {
 		newMiddlewares(config),
 	}
 	router.Use(cors.Default())
+	router.Use(sessions.Sessions("mysession", cookie.NewStore([]byte(config.SessionSecret))))
 	return router
 }
 

@@ -5,6 +5,7 @@ import "github.com/spf13/viper"
 type Config struct {
 	MongoURI               string `mapstructure:"MONGO_URI"`
 	ServerPort             uint16 `mapstructure:"SERVER_PORT"`
+	SessionSecret          string `mapstructure:"SESSION_SECRET"`
 	GoogleClientID         string `mapstructure:"GOOGLE_CLIENT_ID"`
 	GoogleClientSecret     string `mapstructure:"GOOGLE_CLIENT_SECRET"`
 	GoogleOauthRedirectURL string `mapstructure:"GOOGLE_OAUTH_REDIRECT_URL"`

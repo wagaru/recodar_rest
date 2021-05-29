@@ -8,13 +8,11 @@ import (
 	"net/url"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/wagaru/recodar-rest/internal/domain"
+	"github.com/wagaru/recodar-rest/internal/utils"
 )
-
-func (delivery *httpDelivery) authLine(c *gin.Context) {
-	c.Redirect(http.StatusFound, delivery.usecase.GetLineOAuthURL())
-}
 
 type LineResponseError struct {
 	Error            string `json:"error"`
@@ -43,6 +41,31 @@ type LineJWTClaims struct {
 	jwt.StandardClaims
 }
 
+func (delivery *httpDelivery) authLine(c *gin.Context) {
+	state := utils.RandToken(30)
+	session := sessions.Default(c)
+	session.Set("state", state)
+	session.Save()
+
+	log.Printf("Store state %s", state)
+
+	request, err := http.NewRequest("GET", "https://access.line.me/oauth2/v2.1/authorize", nil)
+	if err != nil {
+		log.Printf("Generate Line Oauth URL failed: %v", err)
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	query := request.URL.Query()
+	query.Add("response_type", "code")
+	query.Add("client_id", delivery.config.LineLoginClientID)
+	query.Add("state", state)
+	query.Add("redirect_uri", delivery.config.LineLoginRedirectURL)
+	query.Add("scope", "profile openid email")
+	request.URL.RawQuery = query.Encode()
+	c.Redirect(http.StatusFound, request.URL.String())
+}
+
 func (delivery *httpDelivery) authLineCallback(c *gin.Context) {
 	errorStr, errorDescription := c.Query("error"), c.QueryArray("error_description")
 	if errorStr != "" {
@@ -54,7 +77,13 @@ func (delivery *httpDelivery) authLineCallback(c *gin.Context) {
 	state, code := c.Query("state"), c.Query("code")
 
 	// check state
-	log.Printf("state: %v", state)
+	session := sessions.Default(c)
+	log.Printf("Store state %s", session.Get("state"))
+	if session.Get("state") != state {
+		log.Printf("state invalid")
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
 
 	resp, err := http.PostForm("https://api.line.me/oauth2/v2.1/token", url.Values{
 		"grant_type":    {"authorization_code"},
