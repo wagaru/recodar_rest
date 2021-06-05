@@ -1,10 +1,15 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"log"
+	"reflect"
+
+	"github.com/spf13/viper"
+)
 
 type Config struct {
 	MongoURI               string `mapstructure:"MONGO_URI"`
-	ServerPort             uint16 `mapstructure:"SERVER_PORT"`
+	ServerPort             uint16 `mapstructure:"PORT"`
 	SessionSecret          string `mapstructure:"SESSION_SECRET"`
 	GoogleClientID         string `mapstructure:"GOOGLE_CLIENT_ID"`
 	GoogleClientSecret     string `mapstructure:"GOOGLE_CLIENT_SECRET"`
@@ -16,18 +21,32 @@ type Config struct {
 }
 
 func LoadConfig(path, configName, configType string) (*Config, error) {
+	config := &Config{}
+
 	viper.AddConfigPath(path)
 	viper.SetConfigName(configName)
 	viper.SetConfigType(configType)
 
-	// viper.AutomaticEnv()
+	// environment variable will override config if exists
+	viper.AutomaticEnv()
 
-	err := viper.ReadInConfig()
-	if err != nil {
-		return nil, err
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			log.Printf("Read config file failed. Use environment variables instead.")
+			t := reflect.TypeOf(config)
+			if t.Kind() == reflect.Ptr {
+				t = t.Elem()
+			}
+			for i := 0; i < t.NumField(); i++ {
+				key := t.Field(i).Tag.Get("mapstructure")
+				viper.BindEnv(key)
+			}
+		} else {
+			return nil, err
+		}
 	}
-	config := &Config{}
-	err = viper.Unmarshal(config)
+
+	err := viper.Unmarshal(config)
 	if err != nil {
 		return nil, err
 	}
