@@ -12,6 +12,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/wagaru/recodar-rest/internal/domain"
 	"github.com/wagaru/recodar-rest/internal/utils"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 type LineResponseError struct {
@@ -166,7 +168,11 @@ func (delivery *httpDelivery) authLineCallback(c *gin.Context) {
 }
 
 func (delivery *httpDelivery) authGoogle(c *gin.Context) {
-	c.Redirect(http.StatusFound, delivery.usecase.GetGoogleOAuthURL())
+	// Ref: https://developers.google.com/identity/protocols/oauth2/openid-connect#php
+	// One good choice for a state token is a string of 30 or so characters constructed using a high-quality random-number generator.
+	state := utils.RandToken(30)
+	conf := delivery.getGoogleOauthConfig()
+	c.Redirect(http.StatusFound, conf.AuthCodeURL(state))
 }
 
 func (delivery *httpDelivery) authGoogleCallback(c *gin.Context) {
@@ -176,12 +182,18 @@ func (delivery *httpDelivery) authGoogleCallback(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "User not grant permission."})
 		return
 	}
-	token, refresh, _, err := delivery.usecase.GetGoogleOAuthAccessToken(c.Query("state"), c.Query("code"))
+
+	conf := delivery.getGoogleOauthConfig()
+	// if session.Get("state") != c.Query("state") {
+	// 	return "", errors.New("Invalid state")
+	// }
+	respToken, err := conf.Exchange(context.Background(), c.Query("code"))
 	if err != nil {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		log.Printf("google exchange token failed with error:%v", err)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-
+	token, refresh := respToken.AccessToken, respToken.RefreshToken
 	log.Printf("token %s", token)
 
 	client := http.Client{}
@@ -242,4 +254,17 @@ func (delivery *httpDelivery) authGoogleCallback(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"token": jwtToken})
+}
+
+func (delivery *httpDelivery) getGoogleOauthConfig() *oauth2.Config {
+	return &oauth2.Config{
+		ClientID:     delivery.config.GoogleClientID,
+		ClientSecret: delivery.config.GoogleClientSecret,
+		RedirectURL:  delivery.config.Server + delivery.config.GoogleOauthRedirectURL,
+		Scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/userinfo.profile",
+		},
+		Endpoint: google.Endpoint,
+	}
 }

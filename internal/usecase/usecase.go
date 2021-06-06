@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"time"
 
 	"github.com/wagaru/recodar-rest/internal/config"
 	"github.com/wagaru/recodar-rest/internal/domain"
@@ -10,11 +9,6 @@ import (
 )
 
 type Usecase interface {
-	// auth
-	GetLineOAuthURL() string
-	GetGoogleOAuthURL() string
-	GetGoogleOAuthAccessToken(state, code string) (string, string, time.Time, error)
-
 	// Video
 	StoreVideo(ctx context.Context, info map[string]interface{}) error
 
