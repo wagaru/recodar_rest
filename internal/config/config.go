@@ -10,6 +10,7 @@ import (
 type Config struct {
 	MongoURI               string `mapstructure:"MONGO_URI"`
 	ServerPort             uint16 `mapstructure:"PORT"`
+	Server                 string `mapstructure:"SERVER"`
 	SessionSecret          string `mapstructure:"SESSION_SECRET"`
 	GoogleClientID         string `mapstructure:"GOOGLE_CLIENT_ID"`
 	GoogleClientSecret     string `mapstructure:"GOOGLE_CLIENT_SECRET"`

@@ -60,7 +60,7 @@ func (delivery *httpDelivery) authLine(c *gin.Context) {
 	query.Add("response_type", "code")
 	query.Add("client_id", delivery.config.LineLoginClientID)
 	query.Add("state", state)
-	query.Add("redirect_uri", delivery.config.LineLoginRedirectURL)
+	query.Add("redirect_uri", delivery.config.Server+delivery.config.LineLoginRedirectURL)
 	query.Add("scope", "profile openid email")
 	request.URL.RawQuery = query.Encode()
 	c.Redirect(http.StatusFound, request.URL.String())
@@ -90,7 +90,7 @@ func (delivery *httpDelivery) authLineCallback(c *gin.Context) {
 		"client_id":     {delivery.config.LineLoginClientID},
 		"client_secret": {delivery.config.LineLoginClientSecret},
 		"code":          {code},
-		"redirect_uri":  {delivery.config.LineLoginRedirectURL},
+		"redirect_uri":  {delivery.config.Server + delivery.config.LineLoginRedirectURL},
 	})
 	if err != nil {
 		log.Printf("change token failed, %v", err)
