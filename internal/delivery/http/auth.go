@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-contrib/sessions"
@@ -53,9 +54,7 @@ func (delivery *httpDelivery) authLine(c *gin.Context) {
 
 	request, err := http.NewRequest("GET", "https://access.line.me/oauth2/v2.1/authorize", nil)
 	if err != nil {
-		log.Printf("Generate Line Oauth URL failed: %v", err)
-		c.AbortWithStatus(http.StatusBadRequest)
-		return
+		delivery.WrapResponse(c, ErrorResponse{err: err})
 	}
 
 	query := request.URL.Query()
@@ -71,9 +70,7 @@ func (delivery *httpDelivery) authLine(c *gin.Context) {
 func (delivery *httpDelivery) authLineCallback(c *gin.Context) {
 	errorStr, errorDescription := c.Query("error"), c.QueryArray("error_description")
 	if errorStr != "" {
-		log.Printf("line callback with error:%s, err_description: %s", errorStr, errorDescription)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "User not grant permission."})
-		return
+		delivery.WrapResponse(c, ErrorResponse{errMsg: errorStr, errDetail: strings.Join(errorDescription, ",")})
 	}
 
 	state, code := c.Query("state"), c.Query("code")
@@ -82,9 +79,7 @@ func (delivery *httpDelivery) authLineCallback(c *gin.Context) {
 	session := sessions.Default(c)
 	log.Printf("Store state %s", session.Get("state"))
 	if session.Get("state") != state {
-		log.Printf("state invalid")
-		c.AbortWithStatus(http.StatusBadRequest)
-		return
+		delivery.WrapResponse(c, ErrorResponse{errMsg: "Invalid State"})
 	}
 
 	resp, err := http.PostForm("https://api.line.me/oauth2/v2.1/token", url.Values{
@@ -95,30 +90,22 @@ func (delivery *httpDelivery) authLineCallback(c *gin.Context) {
 		"redirect_uri":  {delivery.config.Server + delivery.config.LineLoginRedirectURL},
 	})
 	if err != nil {
-		log.Printf("change token failed, %v", err)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Unexpected error."})
-		return
+		delivery.WrapResponse(c, ErrorResponse{err: err, errMsg: "Invalid token"})
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		log.Println("get access token failed.")
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Unexpected error."})
-		return
+		delivery.WrapResponse(c, ErrorResponse{errMsg: "Get Access token failed."})
 	}
 
 	respData := LineTokenResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&respData)
 	if err != nil {
-		log.Printf("decode resp data failed: %v", err)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Unexpected error."})
-		return
+		delivery.WrapResponse(c, ErrorResponse{err: err, errDetail: "Decode resp data failed."})
 	}
 
 	if respData.Error != "" {
-		log.Printf("error: %s, error_description: %s", respData.Error, respData.ErrorDescription)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Unexpected error."})
-		return
+		delivery.WrapResponse(c, ErrorResponse{errMsg: respData.Error, errDetail: respData.ErrorDescription})
 	}
 
 	user := &domain.User{
@@ -139,9 +126,7 @@ func (delivery *httpDelivery) authLineCallback(c *gin.Context) {
 		user.Email = claims.Email
 		user.Picture = claims.Picture
 	} else {
-		log.Printf("parse JWT token failed, %v", err)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Unexpected error."})
-		return
+		delivery.WrapResponse(c, ErrorResponse{err: err})
 	}
 
 	// update Data
@@ -158,13 +143,16 @@ func (delivery *httpDelivery) authLineCallback(c *gin.Context) {
 			// "jwt":           user.JWT,
 		})
 	if err != nil {
-		log.Printf("Upsert user failed. %v", err)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Unexpected error."})
-		return
+		delivery.WrapResponse(c, ErrorResponse{err: err, errMsg: "Upsert user failed."})
 	}
 
 	jwtToken, err := delivery.usecase.GenerateJWTToken(context.Background(), user)
-	c.JSON(http.StatusOK, gin.H{"token": jwtToken})
+	if err != nil {
+		delivery.WrapResponse(c, ErrorResponse{err: err, errMsg: "Generate token failed."})
+	}
+	delivery.WrapResponse(c, SuccessResponse{data: map[string]interface{}{
+		"token": jwtToken,
+	}})
 }
 
 func (delivery *httpDelivery) authGoogle(c *gin.Context) {
@@ -178,9 +166,10 @@ func (delivery *httpDelivery) authGoogle(c *gin.Context) {
 func (delivery *httpDelivery) authGoogleCallback(c *gin.Context) {
 	errorStr := c.Query("error")
 	if errorStr != "" {
-		log.Printf("google callback with error:%s", errorStr)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "User not grant permission."})
-		return
+		// log.Printf("google callback with error:%s", errorStr)
+		// c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "User not grant permission."})
+		// return
+		delivery.WrapResponse(c, ErrorResponse{errMsg: errorStr})
 	}
 
 	conf := delivery.getGoogleOauthConfig()
