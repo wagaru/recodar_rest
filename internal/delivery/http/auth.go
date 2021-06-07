@@ -166,9 +166,6 @@ func (delivery *httpDelivery) authGoogle(c *gin.Context) {
 func (delivery *httpDelivery) authGoogleCallback(c *gin.Context) {
 	errorStr := c.Query("error")
 	if errorStr != "" {
-		// log.Printf("google callback with error:%s", errorStr)
-		// c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "User not grant permission."})
-		// return
 		delivery.WrapResponse(c, ErrorResponse{errMsg: errorStr})
 	}
 
@@ -178,9 +175,7 @@ func (delivery *httpDelivery) authGoogleCallback(c *gin.Context) {
 	// }
 	respToken, err := conf.Exchange(context.Background(), c.Query("code"))
 	if err != nil {
-		log.Printf("google exchange token failed with error:%v", err)
-		c.AbortWithStatus(http.StatusBadRequest)
-		return
+		delivery.WrapResponse(c, ErrorResponse{err: err, errDetail: "Google exchange token failed."})
 	}
 	token, refresh := respToken.AccessToken, respToken.RefreshToken
 	log.Printf("token %s", token)
@@ -189,22 +184,19 @@ func (delivery *httpDelivery) authGoogleCallback(c *gin.Context) {
 
 	req, err := http.NewRequest(http.MethodGet, "https://www.googleapis.com/oauth2/v2/userinfo", nil)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid"})
-		return
+		delivery.WrapResponse(c, ErrorResponse{err: err, errMsg: "Invalid"})
 	}
 	req.Header.Add("Authorization", "Bearer "+token)
 	resp, err := client.Do(req)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid"})
-		return
+		delivery.WrapResponse(c, ErrorResponse{err: err, errMsg: "Invalid"})
 	}
 	defer resp.Body.Close()
 
 	userInfo := GoogleUserInfoResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&userInfo)
 	if err != nil {
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
+		delivery.WrapResponse(c, ErrorResponse{err: err, errMsg: "Invalid", errDetail: "Decode response failed."})
 	}
 
 	user := &domain.User{
@@ -229,20 +221,18 @@ func (delivery *httpDelivery) authGoogleCallback(c *gin.Context) {
 			"refresh_token": user.RefreshToken,
 		})
 	if err != nil {
-		log.Printf("Upsert user failed. %v", err)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Unexpected error."})
-		return
+		delivery.WrapResponse(c, ErrorResponse{err: err, errDetail: "Upsert user failed."})
 	}
 
 	log.Printf("user %v", user)
 
 	jwtToken, err := delivery.usecase.GenerateJWTToken(context.Background(), user)
 	if err != nil {
-		log.Printf("Generate JWT token failed.%v", err)
-		c.AbortWithStatus(http.StatusBadRequest)
-		return
+		delivery.WrapResponse(c, ErrorResponse{err: err, errDetail: "Generate JWT token failed"})
 	}
-	c.JSON(http.StatusOK, gin.H{"token": jwtToken})
+	delivery.WrapResponse(c, SuccessResponse{data: map[string]interface{}{
+		"token": jwtToken,
+	}})
 }
 
 func (delivery *httpDelivery) getGoogleOauthConfig() *oauth2.Config {
