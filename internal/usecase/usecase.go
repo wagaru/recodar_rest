@@ -9,9 +9,6 @@ import (
 )
 
 type Usecase interface {
-	// Video
-	StoreVideo(ctx context.Context, info map[string]interface{}) error
-
 	// Accident
 	StoreAccident(ctx context.Context, accident *domain.Accident) error
 	StoreAccidents(ctx context.Context, accidents []*domain.Accident) error

@@ -2,7 +2,7 @@ package http
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +15,6 @@ func (delivery *httpDelivery) getAccidents(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
-	//fmt.Println(accidents[0])
 	c.JSON(http.StatusOK, accidents)
 }
 
@@ -23,14 +22,15 @@ func (delivery *httpDelivery) postAccidents(c *gin.Context) {
 	var a domain.Accident
 	err := c.ShouldBindJSON(&a)
 	if err != nil {
-		//TODO
-		fmt.Print(err)
+		log.Printf("Uplaod accidents failed.%v", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Upload accidents failed. Invalid input"})
 		return
 	}
-	// fmt.Printf("%+v\n", a)
 	err = delivery.usecase.StoreAccident(context.Background(), &a)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("Uplaod accidents failed.%v", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Upload accidents failed. DB Error"})
+		return
 	}
-	c.String(http.StatusOK, "hello")
+	c.JSON(http.StatusOK, gin.H{"success": true})
 }

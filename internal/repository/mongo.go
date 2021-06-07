@@ -25,15 +25,11 @@ type Repository interface {
 	Disconnect()
 
 	// User
-	GetUser(ctx context.Context, key string, value interface{}) (*domain.User, error)
 	FindUser(ctx context.Context, condition map[string]interface{}) (*domain.User, error)
 	FindUserById(ctx context.Context, IDHex string) (*domain.User, error)
 	StoreUser(ctx context.Context, u *domain.User) (string, error)
 	UpdateUser(ctx context.Context, id string, u *domain.User) error
 	UpsertUser(ctx context.Context, filter map[string]interface{}, update map[string]interface{}) (*domain.User, error)
-
-	// Video
-	StoreVideo(ctx context.Context, v *domain.Video) (interface{}, error)
 
 	// Accident
 	StoreAccident(ctx context.Context, a *domain.Accident) (interface{}, error)
