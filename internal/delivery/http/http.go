@@ -4,20 +4,19 @@ import (
 	"fmt"
 
 	"github.com/wagaru/recodar-rest/internal/config"
-	"github.com/wagaru/recodar-rest/internal/delivery/http/router"
 	"github.com/wagaru/recodar-rest/internal/usecase"
 )
 
 type httpDelivery struct {
 	usecase usecase.Usecase
-	router  *router.Router
+	router  *Router
 	config  *config.Config
 }
 
 func NewHttpDelivery(usecase usecase.Usecase, config *config.Config) *httpDelivery {
 	return &httpDelivery{
 		usecase: usecase,
-		router:  router.NewRouter(config),
+		router:  NewRouter(config),
 		config:  config,
 	}
 }

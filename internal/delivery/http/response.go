@@ -19,7 +19,7 @@ type SuccessResponse struct {
 	data   map[string]interface{}
 }
 
-func (delivery *httpDelivery) WrapResponse(c *gin.Context, responseType interface{}) {
+func WrapResponse(c *gin.Context, responseType interface{}) {
 	switch v := responseType.(type) {
 	case ErrorResponse:
 		status := v.status
@@ -32,13 +32,11 @@ func (delivery *httpDelivery) WrapResponse(c *gin.Context, responseType interfac
 		}
 		log.Printf("[Response] Error: status %d, err %v, errMsg %s, errDetail: %s", status, v.err, errMsg, v.errDetail)
 		c.AbortWithStatusJSON(status, gin.H{"error": errMsg})
-		return
 	case SuccessResponse:
 		status := v.status
 		if status == 0 {
 			status = http.StatusOK
 		}
 		c.JSON(status, v.data)
-		return
 	}
 }

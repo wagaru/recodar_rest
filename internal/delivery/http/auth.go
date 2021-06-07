@@ -54,7 +54,8 @@ func (delivery *httpDelivery) authLine(c *gin.Context) {
 
 	request, err := http.NewRequest("GET", "https://access.line.me/oauth2/v2.1/authorize", nil)
 	if err != nil {
-		delivery.WrapResponse(c, ErrorResponse{err: err})
+		WrapResponse(c, ErrorResponse{err: err})
+		return
 	}
 
 	query := request.URL.Query()
@@ -70,7 +71,8 @@ func (delivery *httpDelivery) authLine(c *gin.Context) {
 func (delivery *httpDelivery) authLineCallback(c *gin.Context) {
 	errorStr, errorDescription := c.Query("error"), c.QueryArray("error_description")
 	if errorStr != "" {
-		delivery.WrapResponse(c, ErrorResponse{errMsg: errorStr, errDetail: strings.Join(errorDescription, ",")})
+		WrapResponse(c, ErrorResponse{errMsg: errorStr, errDetail: strings.Join(errorDescription, ",")})
+		return
 	}
 
 	state, code := c.Query("state"), c.Query("code")
@@ -79,7 +81,8 @@ func (delivery *httpDelivery) authLineCallback(c *gin.Context) {
 	session := sessions.Default(c)
 	log.Printf("Store state %s", session.Get("state"))
 	if session.Get("state") != state {
-		delivery.WrapResponse(c, ErrorResponse{errMsg: "Invalid State"})
+		WrapResponse(c, ErrorResponse{errMsg: "Invalid State"})
+		return
 	}
 
 	resp, err := http.PostForm("https://api.line.me/oauth2/v2.1/token", url.Values{
@@ -90,22 +93,26 @@ func (delivery *httpDelivery) authLineCallback(c *gin.Context) {
 		"redirect_uri":  {delivery.config.Server + delivery.config.LineLoginRedirectURL},
 	})
 	if err != nil {
-		delivery.WrapResponse(c, ErrorResponse{err: err, errMsg: "Invalid token"})
+		WrapResponse(c, ErrorResponse{err: err, errMsg: "Invalid token"})
+		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		delivery.WrapResponse(c, ErrorResponse{errMsg: "Get Access token failed."})
+		WrapResponse(c, ErrorResponse{errMsg: "Get Access token failed."})
+		return
 	}
 
 	respData := LineTokenResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&respData)
 	if err != nil {
-		delivery.WrapResponse(c, ErrorResponse{err: err, errDetail: "Decode resp data failed."})
+		WrapResponse(c, ErrorResponse{err: err, errDetail: "Decode resp data failed."})
+		return
 	}
 
 	if respData.Error != "" {
-		delivery.WrapResponse(c, ErrorResponse{errMsg: respData.Error, errDetail: respData.ErrorDescription})
+		WrapResponse(c, ErrorResponse{errMsg: respData.Error, errDetail: respData.ErrorDescription})
+		return
 	}
 
 	user := &domain.User{
@@ -126,7 +133,8 @@ func (delivery *httpDelivery) authLineCallback(c *gin.Context) {
 		user.Email = claims.Email
 		user.Picture = claims.Picture
 	} else {
-		delivery.WrapResponse(c, ErrorResponse{err: err})
+		WrapResponse(c, ErrorResponse{err: err})
+		return
 	}
 
 	// update Data
@@ -143,14 +151,16 @@ func (delivery *httpDelivery) authLineCallback(c *gin.Context) {
 			// "jwt":           user.JWT,
 		})
 	if err != nil {
-		delivery.WrapResponse(c, ErrorResponse{err: err, errMsg: "Upsert user failed."})
+		WrapResponse(c, ErrorResponse{err: err, errMsg: "Upsert user failed."})
+		return
 	}
 
 	jwtToken, err := delivery.usecase.GenerateJWTToken(context.Background(), user)
 	if err != nil {
-		delivery.WrapResponse(c, ErrorResponse{err: err, errMsg: "Generate token failed."})
+		WrapResponse(c, ErrorResponse{err: err, errMsg: "Generate token failed."})
+		return
 	}
-	delivery.WrapResponse(c, SuccessResponse{data: map[string]interface{}{
+	WrapResponse(c, SuccessResponse{data: map[string]interface{}{
 		"token": jwtToken,
 	}})
 }
@@ -166,7 +176,8 @@ func (delivery *httpDelivery) authGoogle(c *gin.Context) {
 func (delivery *httpDelivery) authGoogleCallback(c *gin.Context) {
 	errorStr := c.Query("error")
 	if errorStr != "" {
-		delivery.WrapResponse(c, ErrorResponse{errMsg: errorStr})
+		WrapResponse(c, ErrorResponse{errMsg: errorStr})
+		return
 	}
 
 	conf := delivery.getGoogleOauthConfig()
@@ -175,7 +186,8 @@ func (delivery *httpDelivery) authGoogleCallback(c *gin.Context) {
 	// }
 	respToken, err := conf.Exchange(context.Background(), c.Query("code"))
 	if err != nil {
-		delivery.WrapResponse(c, ErrorResponse{err: err, errDetail: "Google exchange token failed."})
+		WrapResponse(c, ErrorResponse{err: err, errDetail: "Google exchange token failed."})
+		return
 	}
 	token, refresh := respToken.AccessToken, respToken.RefreshToken
 	log.Printf("token %s", token)
@@ -184,19 +196,22 @@ func (delivery *httpDelivery) authGoogleCallback(c *gin.Context) {
 
 	req, err := http.NewRequest(http.MethodGet, "https://www.googleapis.com/oauth2/v2/userinfo", nil)
 	if err != nil {
-		delivery.WrapResponse(c, ErrorResponse{err: err, errMsg: "Invalid"})
+		WrapResponse(c, ErrorResponse{err: err, errMsg: "Invalid"})
+		return
 	}
 	req.Header.Add("Authorization", "Bearer "+token)
 	resp, err := client.Do(req)
 	if err != nil {
-		delivery.WrapResponse(c, ErrorResponse{err: err, errMsg: "Invalid"})
+		WrapResponse(c, ErrorResponse{err: err, errMsg: "Invalid"})
+		return
 	}
 	defer resp.Body.Close()
 
 	userInfo := GoogleUserInfoResponse{}
 	err = json.NewDecoder(resp.Body).Decode(&userInfo)
 	if err != nil {
-		delivery.WrapResponse(c, ErrorResponse{err: err, errMsg: "Invalid", errDetail: "Decode response failed."})
+		WrapResponse(c, ErrorResponse{err: err, errMsg: "Invalid", errDetail: "Decode response failed."})
+		return
 	}
 
 	user := &domain.User{
@@ -221,16 +236,18 @@ func (delivery *httpDelivery) authGoogleCallback(c *gin.Context) {
 			"refresh_token": user.RefreshToken,
 		})
 	if err != nil {
-		delivery.WrapResponse(c, ErrorResponse{err: err, errDetail: "Upsert user failed."})
+		WrapResponse(c, ErrorResponse{err: err, errDetail: "Upsert user failed."})
+		return
 	}
 
 	log.Printf("user %v", user)
 
 	jwtToken, err := delivery.usecase.GenerateJWTToken(context.Background(), user)
 	if err != nil {
-		delivery.WrapResponse(c, ErrorResponse{err: err, errDetail: "Generate JWT token failed"})
+		WrapResponse(c, ErrorResponse{err: err, errDetail: "Generate JWT token failed"})
+		return
 	}
-	delivery.WrapResponse(c, SuccessResponse{data: map[string]interface{}{
+	WrapResponse(c, SuccessResponse{data: map[string]interface{}{
 		"token": jwtToken,
 	}})
 }

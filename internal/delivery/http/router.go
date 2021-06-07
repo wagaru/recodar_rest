@@ -1,7 +1,6 @@
-package router
+package http
 
 import (
-	"log"
 	"net/http"
 	"strings"
 
@@ -34,16 +33,14 @@ func newMiddlewares(config *config.Config) map[string]gin.HandlerFunc {
 		"AuthRequired": func(c *gin.Context) {
 			tokens := strings.Split(c.GetHeader("Authorization"), " ")
 			if len(tokens) != 2 || (len(tokens) == 2 && tokens[0] != "Bearer") {
-				log.Printf("Incorrect bearer type.%v", tokens)
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "No permission"})
+				WrapResponse(c, ErrorResponse{status: http.StatusUnauthorized, errMsg: "No permission", errDetail: "Incorrect bearer type."})
 				return
 			}
 			token, err := jwt.ParseWithClaims(tokens[1], &domain.Claims{}, func(token *jwt.Token) (interface{}, error) {
 				return []byte(config.JwtSecret), nil
 			})
 			if err != nil {
-				log.Printf("decode failed.%v", err)
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "No permission"})
+				WrapResponse(c, ErrorResponse{err: err, errMsg: "No permission"})
 				return
 			}
 
