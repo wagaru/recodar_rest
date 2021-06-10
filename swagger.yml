@@ -42,7 +42,50 @@ components:
                   items:
                     type: number
                     format: float
-
+                  minLength: 2
+                  maxLength: 2
+                  example: [120.9715940760574, 24.80227118111046]
+        approx_time:
+          type: string
+          example: "2021-03-20T16:00:00Z"
+          description: 事故發生時間
+        description:
+          type: string
+          example: 一台公車跟汽座在快車道發生擦撞，公車直行而汽車要右轉
+          description: 事故發生經過
+        accident_objects:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            enum:
+              - Automobile
+              - Bicycle
+              - Motorcycle
+              - Pedestrian
+              - Others
+          example: ['Automobile']
+        videos:
+          type: array
+          items:
+            type: object
+            properties:
+              media_id:
+                type: string
+                example: PALItzoZ5b0
+                description: media ID
+              media_url:
+                type: string
+                example: https://www.youtube.com/watch?v=PALItzoZ5b0
+                description: media 網址
+              media_type:
+                type: string
+                example: youtube
+                description: media 類型
+                enum:
+                  - youtube
+          minLength: 1
+          
 paths:
   /api/v1/auth/line:
     get:
