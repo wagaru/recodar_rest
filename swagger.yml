@@ -1,0 +1,229 @@
+openapi: '3.0.2'
+info:
+  title: Recodar RESTful API
+  version: '1.0'
+servers:
+  - url: http://localhost:9999
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    AccessToken:
+      type: object
+      properties:
+        token:
+          type: string
+    Accident:
+      type: object
+      properties:
+        place:
+          type: object
+          properties:
+            level_1:
+              type: string
+              example: 新竹市東區
+              description: 事發地點所在的縣/市/鄉/鎮
+            level_2:
+              type: string
+              example: 中正路
+              description: 事發地點所在的道路
+            geo_location:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - Point
+                coordinates:
+                  type: array
+                  items:
+                    type: number
+                    format: float
+                  minLength: 2
+                  maxLength: 2
+                  example: [120.9715940760574, 24.80227118111046]
+        approx_time:
+          type: string
+          example: "2021-03-20T16:00:00Z"
+          description: 事故發生時間
+        description:
+          type: string
+          example: 一台公車跟汽座在快車道發生擦撞，公車直行而汽車要右轉
+          description: 事故發生經過
+        accident_objects:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            enum:
+              - Automobile
+              - Bicycle
+              - Motorcycle
+              - Pedestrian
+              - Others
+          example: ['Automobile']
+        videos:
+          type: array
+          items:
+            type: object
+            properties:
+              media_id:
+                type: string
+                example: PALItzoZ5b0
+                description: media ID
+              media_url:
+                type: string
+                example: https://www.youtube.com/watch?v=PALItzoZ5b0
+                description: media 網址
+              media_type:
+                type: string
+                example: youtube
+                description: media 類型
+                enum:
+                  - youtube
+          minLength: 1
+        created_at:
+          type: string
+          description: 建立時間
+          example: '2021-03-24T09:34:21.599Z'
+        updated_at:
+          type: string
+          description: 更新時間
+          example: '2021-03-24T09:34:21.599Z'
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+paths:
+  /api/v1/auth/line:
+    get:
+      summary: 透過 Line 認證
+      tags:
+        - Authorization
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessToken'
+  
+  /api/v1/auth/google:
+    get:
+      summary: 透過 Google 認證
+      tags:
+        - Authorization
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessToken'
+  
+  /api/v1/accidents:
+    get:
+      summary: 撈取 accidents 清單
+      tags:
+        - Accidents
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: 第幾頁
+          schema:
+            type: string
+          example: 1
+        - name: perPage
+          in: query
+          description: 每一頁有幾筆
+          schema:
+            type: string
+          example: 10
+        - name: sort
+          in: query
+          description: 資料的排序
+          schema:
+            type: string
+          example: "created_at desc"
+        - name: search
+          in: query
+          description: 全文檢索 place.level_1, place.level_2, description 裡是否有符合的關鍵字
+          schema:
+            type: string
+          example: 新竹市中正路
+        - name: near
+          in: query
+          description: 根據給定的經緯值，搜尋範圍 500 公尺內是否有符合條件的事故
+          schema:
+            type: string
+          example: '120.9715, 24.8022'
+        - name: aboutTime
+          in: query
+          description: 根據給定的時間，搜尋前後三個小時內是否有符合條件的事故
+          schema:
+            type: string
+          example: '2021-06-01 13:00:00'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Accident'
+        default:
+          description: Error
+          content:
+            application/json:
+             schema:
+              $ref: '#/components/schemas/Error'
+    post:
+      summary: 上傳 accident
+      tags:
+        - Accidents
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              $ref: '#/components/schemas/Accident'
+              required:
+                - place
+                - approx_time
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                    description: 上傳成功或失敗
+        default:
+          description: Error
+          content:
+            application/json:
+             schema:
+              $ref: '#/components/schemas/Error'
+      
+
+
+
+            
