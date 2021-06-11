@@ -3,13 +3,32 @@ info:
   title: Recodar RESTful API
   version: '1.0'
 servers:
-  - url: https://localhost:9999
+  - url: http://localhost:9999
 components:
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  responses:
+    NotFound:
+      description: NotFound
+      content:
+        application/json:
+         schema:
+          $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
     AccessToken:
       type: object
@@ -85,7 +104,20 @@ components:
                 enum:
                   - youtube
           minLength: 1
-          
+        created_at:
+          type: string
+          description: 建立時間
+          example: '2021-03-24T09:34:21.599Z'
+        updated_at:
+          type: string
+          description: 更新時間
+          example: '2021-03-24T09:34:21.599Z'
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
 paths:
   /api/v1/auth/line:
     get:
@@ -120,6 +152,43 @@ paths:
         - Accidents
       security:
         - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: 第幾頁
+          schema:
+            type: string
+          example: 1
+        - name: perPage
+          in: query
+          description: 每一頁有幾筆
+          schema:
+            type: string
+          example: 10
+        - name: sort
+          in: query
+          description: 資料的排序
+          schema:
+            type: string
+          example: "created_at desc"
+        - name: search
+          in: query
+          description: 全文檢索 place.level_1, place.level_2, description 裡是否有符合的關鍵字
+          schema:
+            type: string
+          example: 新竹市中正路
+        - name: near
+          in: query
+          description: 根據給定的經緯值，搜尋範圍 500 公尺內是否有符合條件的事故
+          schema:
+            type: string
+          example: '120.9715, 24.8022'
+        - name: aboutTime
+          in: query
+          description: 根據給定的時間，搜尋前後三個小時內是否有符合條件的事故
+          schema:
+            type: string
+          example: '2021-06-01 13:00:00'
       responses:
         '200':
           description: 成功
@@ -132,6 +201,44 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Accident'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      summary: 上傳 accident
+      tags:
+        - Accidents
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              $ref: '#/components/schemas/Accident'
+              required:
+                - place
+                - approx_time
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                    description: 上傳成功或失敗
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+      
+
 
 
             
