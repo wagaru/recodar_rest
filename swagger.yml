@@ -10,25 +10,6 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-  responses:
-    NotFound:
-      description: NotFound
-      content:
-        application/json:
-         schema:
-          $ref: '#/components/schemas/Error'
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    BadRequest:
-      description: Bad request
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   schemas:
     AccessToken:
       type: object
@@ -201,10 +182,12 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Accident'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '400':
-          $ref: '#/components/responses/BadRequest'
+        default:
+          description: Error
+          content:
+            application/json:
+             schema:
+              $ref: '#/components/schemas/Error'
     post:
       summary: 上傳 accident
       tags:
@@ -233,10 +216,12 @@ paths:
                     type: boolean
                     example: true
                     description: 上傳成功或失敗
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '400':
-          $ref: '#/components/responses/BadRequest'
+        default:
+          description: Error
+          content:
+            application/json:
+             schema:
+              $ref: '#/components/schemas/Error'
       
 
 
