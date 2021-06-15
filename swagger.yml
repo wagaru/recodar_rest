@@ -222,7 +222,6 @@ paths:
             application/json:
              schema:
               $ref: '#/components/schemas/Error'
-
   /api/v1/accidents/{id}:
     delete:
       summary: 刪除 accident

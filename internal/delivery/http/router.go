@@ -50,7 +50,7 @@ func newMiddlewares(config *config.Config) map[string]gin.HandlerFunc {
 				return []byte(config.JwtSecret), nil
 			})
 			if err != nil {
-				WrapResponse(c, ErrorResponse{err: err, errMsg: "No permission"})
+				WrapResponse(c, ErrorResponse{status: http.StatusUnauthorized, err: err, errMsg: "No permission"})
 				return
 			}
 
