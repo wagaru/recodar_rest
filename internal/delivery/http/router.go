@@ -23,9 +23,19 @@ func NewRouter(config *config.Config) *Router {
 		gin.Default(),
 		newMiddlewares(config),
 	}
-	router.Use(cors.Default())
+	router.Use(cors.New(newCorsConfig()))
 	router.Use(sessions.Sessions("mysession", cookie.NewStore([]byte(config.SessionSecret))))
 	return router
+}
+
+func newCorsConfig() cors.Config {
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{
+		"http://localhost:8081", // swagger
+	}
+	config.AddAllowMethods("DELETE")
+	config.AddAllowHeaders("Authorization")
+	return config
 }
 
 func newMiddlewares(config *config.Config) map[string]gin.HandlerFunc {

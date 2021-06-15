@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/wagaru/recodar-rest/internal/domain"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -52,4 +54,17 @@ func (repo *mongoRepo) GetAccidents(ctx context.Context, queryFilter *domain.Que
 		return nil, err
 	}
 	return accidents, nil
+}
+
+func (repo *mongoRepo) DeleteAccident(ctx context.Context, IDHex string) error {
+	collection := repo.db.Collection(MONGO_ACCIDENT_COLLECTION)
+	objectID, err := primitive.ObjectIDFromHex(IDHex)
+	if err != nil {
+		return err
+	}
+	_, err = collection.DeleteOne(ctx, bson.M{"_id": objectID})
+	if err != nil {
+		return err
+	}
+	return nil
 }

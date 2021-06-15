@@ -13,6 +13,7 @@ type Usecase interface {
 	StoreAccident(ctx context.Context, accident *domain.Accident) error
 	StoreAccidents(ctx context.Context, accidents []*domain.Accident) error
 	GetAccidents(ctx context.Context, queryFilter *domain.QueryFilter) ([]*domain.Accident, error)
+	DeleteAccident(ctx context.Context, IDHex string) error
 
 	// User
 	FindUser(ctx context.Context, condition map[string]interface{}) (*domain.User, error)

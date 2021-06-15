@@ -26,3 +26,7 @@ func (u *usecase) GetAccidents(ctx context.Context, queryFilter *domain.QueryFil
 	}
 	return accidents, nil
 }
+
+func (u *usecase) DeleteAccident(ctx context.Context, IDHex string) error {
+	return u.repo.DeleteAccident(ctx, IDHex)
+}

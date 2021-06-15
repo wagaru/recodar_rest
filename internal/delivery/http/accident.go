@@ -34,3 +34,14 @@ func (delivery *httpDelivery) postAccidents(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true})
 }
+
+func (delivery *httpDelivery) deleteAccident(c *gin.Context) {
+	// TODO: check user can delete accident
+	IDHex := c.Param("id")
+	err := delivery.usecase.DeleteAccident(context.Background(), IDHex)
+	if err != nil {
+		WrapResponse(c, ErrorResponse{err: err})
+		return
+	}
+	WrapResponse(c, SuccessResponse{status: http.StatusNoContent})
+}
