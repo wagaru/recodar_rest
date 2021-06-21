@@ -245,6 +245,33 @@ paths:
             application/json:
              schema:
               $ref: '#/components/schemas/Error'
+  /api/v1/accidents/delete:
+    post:
+      summary: 刪除多個 accident
+      tags:
+        - Accidents
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  example: [id1, id2]
+                  description: 要刪除的 accident id 清單
+      responses:
+        '204':
+          description: 成功
+        default:
+          description: Error
+          content:
+            application/json:
+             schema:
+              $ref: '#/components/schemas/Error'
 
 
 

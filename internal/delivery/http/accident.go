@@ -45,3 +45,22 @@ func (delivery *httpDelivery) deleteAccident(c *gin.Context) {
 	}
 	WrapResponse(c, SuccessResponse{status: http.StatusNoContent})
 }
+
+func (delivery *httpDelivery) deleteAccidents(c *gin.Context) {
+	// TODO: check user can delete accidents
+
+	type IDs struct {
+		IDs []string `json:"ids"`
+	}
+
+	var ids IDs
+	if err := c.ShouldBindJSON(&ids); err != nil {
+		WrapResponse(c, ErrorResponse{err: err})
+		return
+	}
+	err := delivery.usecase.DeleteAccidents(context.Background(), ids.IDs)
+	if err != nil {
+		WrapResponse(c, ErrorResponse{err: err})
+	}
+	WrapResponse(c, SuccessResponse{status: http.StatusNoContent})
+}

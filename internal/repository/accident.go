@@ -68,3 +68,21 @@ func (repo *mongoRepo) DeleteAccident(ctx context.Context, IDHex string) error {
 	}
 	return nil
 }
+
+func (repo *mongoRepo) DeleteAccidents(ctx context.Context, IDs []string) error {
+	collection := repo.db.Collection(MONGO_ACCIDENT_COLLECTION)
+	IDsHex := make([]primitive.ObjectID, len(IDs))
+	for _, id := range IDs {
+		objectID, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			//TODO throw error
+			continue
+		}
+		IDsHex = append(IDsHex, objectID)
+	}
+	_, err := collection.DeleteMany(ctx, bson.M{"_id": bson.M{"$in": IDsHex}})
+	if err != nil {
+		return err
+	}
+	return nil
+}

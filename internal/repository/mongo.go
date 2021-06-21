@@ -36,6 +36,7 @@ type Repository interface {
 	StoreAccidents(ctx context.Context, as []*domain.Accident) (interface{}, error)
 	GetAccidents(ctx context.Context, queryFilter *domain.QueryFilter) ([]*domain.Accident, error)
 	DeleteAccident(ctx context.Context, IDHex string) error
+	DeleteAccidents(ctx context.Context, IDs []string) error
 }
 type mongoRepo struct {
 	client *mongo.Client

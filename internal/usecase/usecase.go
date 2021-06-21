@@ -14,6 +14,7 @@ type Usecase interface {
 	StoreAccidents(ctx context.Context, accidents []*domain.Accident) error
 	GetAccidents(ctx context.Context, queryFilter *domain.QueryFilter) ([]*domain.Accident, error)
 	DeleteAccident(ctx context.Context, IDHex string) error
+	DeleteAccidents(ctx context.Context, IDs []string) error
 
 	// User
 	FindUser(ctx context.Context, condition map[string]interface{}) (*domain.User, error)

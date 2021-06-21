@@ -36,7 +36,7 @@ func (delivery *httpDelivery) buildRoute() {
 		{
 			authRequired.GET("/accidents", delivery.getAccidents)
 			authRequired.POST("/accidents", delivery.postAccidents)
-			// authRequired.POST("/accidents/delete", delivery.deleteAccidents)
+			authRequired.POST("/accidents/delete", delivery.deleteAccidents)
 			authRequired.DELETE("/accidents/:id", delivery.deleteAccident)
 		}
 	}

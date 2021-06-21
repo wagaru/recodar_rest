@@ -30,3 +30,7 @@ func (u *usecase) GetAccidents(ctx context.Context, queryFilter *domain.QueryFil
 func (u *usecase) DeleteAccident(ctx context.Context, IDHex string) error {
 	return u.repo.DeleteAccident(ctx, IDHex)
 }
+
+func (u *usecase) DeleteAccidents(ctx context.Context, IDs []string) error {
+	return u.repo.DeleteAccidents(ctx, IDs)
+}
