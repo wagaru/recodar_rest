@@ -34,6 +34,8 @@ func (delivery *httpDelivery) buildRoute() {
 
 		authRequired := api.Use(delivery.router.Middlewares["AuthRequired"])
 		{
+			authRequired.GET("/me", delivery.me)
+
 			authRequired.GET("/accidents", delivery.getAccidents)
 			authRequired.POST("/accidents", delivery.postAccidents)
 			authRequired.POST("/accidents/delete", delivery.deleteAccidents)
@@ -42,7 +44,7 @@ func (delivery *httpDelivery) buildRoute() {
 	}
 
 	// for test only
-	delivery.router.GET("genTest", delivery.genTestAccidents)
+	// delivery.router.GET("genTest", delivery.genTestAccidents)
 }
 
 func (delivery *httpDelivery) Run(port uint16) {

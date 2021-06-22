@@ -7,15 +7,15 @@ import (
 	"github.com/wagaru/recodar-rest/internal/domain"
 )
 
-func (u *usecase) StoreAccident(ctx context.Context, accident *domain.Accident) error {
+func (u *usecase) StoreAccident(ctx context.Context, accident *domain.Accident, userID string) error {
 	now := time.Now()
 	accident.CreatedAt = &now
-	_, err := u.repo.StoreAccident(ctx, accident)
+	_, err := u.repo.StoreAccident(ctx, accident, userID)
 	return err
 }
 
-func (u *usecase) StoreAccidents(ctx context.Context, accidents []*domain.Accident) error {
-	_, err := u.repo.StoreAccidents(ctx, accidents)
+func (u *usecase) StoreAccidents(ctx context.Context, accidents []*domain.Accident, userID string) error {
+	_, err := u.repo.StoreAccidents(ctx, accidents, userID)
 	return err
 }
 

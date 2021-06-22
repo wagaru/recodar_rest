@@ -10,8 +10,8 @@ import (
 
 type Usecase interface {
 	// Accident
-	StoreAccident(ctx context.Context, accident *domain.Accident) error
-	StoreAccidents(ctx context.Context, accidents []*domain.Accident) error
+	StoreAccident(ctx context.Context, accident *domain.Accident, userID string) error
+	StoreAccidents(ctx context.Context, accidents []*domain.Accident, userID string) error
 	GetAccidents(ctx context.Context, queryFilter *domain.QueryFilter) ([]*domain.Accident, error)
 	DeleteAccident(ctx context.Context, IDHex string) error
 	DeleteAccidents(ctx context.Context, IDs []string) error

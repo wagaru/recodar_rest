@@ -58,7 +58,7 @@ func newMiddlewares(config *config.Config) map[string]gin.HandlerFunc {
 				c.Set("name", claims.Name)
 				c.Set("email", claims.Email)
 				// c.Set("picture", claims.Picture)
-				c.Set("IDHex", claims.StandardClaims.Subject)
+				c.Set("userID", claims.StandardClaims.Subject)
 			}
 
 			c.Next()

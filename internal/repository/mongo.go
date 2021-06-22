@@ -32,8 +32,8 @@ type Repository interface {
 	UpsertUser(ctx context.Context, filter map[string]interface{}, update map[string]interface{}) (*domain.User, error)
 
 	// Accident
-	StoreAccident(ctx context.Context, a *domain.Accident) (interface{}, error)
-	StoreAccidents(ctx context.Context, as []*domain.Accident) (interface{}, error)
+	StoreAccident(ctx context.Context, a *domain.Accident, userID string) (interface{}, error)
+	StoreAccidents(ctx context.Context, as []*domain.Accident, userID string) (interface{}, error)
 	GetAccidents(ctx context.Context, queryFilter *domain.QueryFilter) ([]*domain.Accident, error)
 	DeleteAccident(ctx context.Context, IDHex string) error
 	DeleteAccidents(ctx context.Context, IDs []string) error

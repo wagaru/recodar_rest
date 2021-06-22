@@ -10,8 +10,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func (repo *mongoRepo) StoreAccident(ctx context.Context, a *domain.Accident) (interface{}, error) {
+func (repo *mongoRepo) StoreAccident(ctx context.Context, a *domain.Accident, userID string) (interface{}, error) {
 	collection := repo.db.Collection(MONGO_ACCIDENT_COLLECTION)
+	objectID, _ := primitive.ObjectIDFromHex(userID)
+	a.UserID = objectID
 	result, err := collection.InsertOne(ctx, a)
 	if err != nil {
 		return nil, err
@@ -19,10 +21,12 @@ func (repo *mongoRepo) StoreAccident(ctx context.Context, a *domain.Accident) (i
 	return result.InsertedID, nil
 }
 
-func (repo *mongoRepo) StoreAccidents(ctx context.Context, as []*domain.Accident) (interface{}, error) {
+func (repo *mongoRepo) StoreAccidents(ctx context.Context, as []*domain.Accident, userID string) (interface{}, error) {
 	collection := repo.db.Collection(MONGO_ACCIDENT_COLLECTION)
+	objectID, _ := primitive.ObjectIDFromHex(userID)
 	documents := []interface{}{}
 	for _, a := range as {
+		a.UserID = objectID
 		documents = append(documents, a)
 	}
 	result, err := collection.InsertMany(ctx, documents)

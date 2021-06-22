@@ -31,7 +31,7 @@ type Accident struct {
 	Videos          []Video            `json:"videos" binding:"required"`
 	CreatedAt       *time.Time         `json:"created_at,omitempty" bson:"created_at,omitempty"`
 	UpdatedAt       *time.Time         `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
-	// CreatorID       primitive.ObjectID `json:"creator_id"`
+	UserID          primitive.ObjectID `json:"user_id" bson:"user_id"`
 }
 type Place struct {
 	Level1      string  `json:"level_1" bson:"level_1" binding:"required"`

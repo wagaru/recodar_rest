@@ -16,7 +16,7 @@ type ErrorResponse struct {
 
 type SuccessResponse struct {
 	status int
-	data   map[string]interface{}
+	data   interface{}
 }
 
 func WrapResponse(c *gin.Context, responseType interface{}) {
