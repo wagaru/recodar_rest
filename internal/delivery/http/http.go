@@ -3,6 +3,7 @@ package http
 import (
 	"fmt"
 
+	"github.com/gin-gonic/gin"
 	"github.com/wagaru/recodar-rest/internal/config"
 	"github.com/wagaru/recodar-rest/internal/usecase"
 )
@@ -22,6 +23,11 @@ func NewHttpDelivery(usecase usecase.Usecase, config *config.Config) *httpDelive
 }
 
 func (delivery *httpDelivery) buildRoute() {
+	delivery.router.Use(delivery.router.Middlewares["RateLimit"]).GET("/", func(c *gin.Context) {
+		c.Status(200)
+		return
+	})
+
 	api := delivery.router.Group("/api/v1")
 	{
 		auth := api.Group("/auth")

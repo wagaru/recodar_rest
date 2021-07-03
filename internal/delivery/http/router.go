@@ -38,6 +38,8 @@ func newCorsConfig() cors.Config {
 	return config
 }
 
+var limiter = NewRateLimiters(5, 10)
+
 func newMiddlewares(config *config.Config) map[string]gin.HandlerFunc {
 	return map[string]gin.HandlerFunc{
 		"AuthRequired": func(c *gin.Context) {
@@ -61,6 +63,14 @@ func newMiddlewares(config *config.Config) map[string]gin.HandlerFunc {
 				c.Set("userID", claims.StandardClaims.Subject)
 			}
 
+			c.Next()
+		},
+		"RateLimit": func(c *gin.Context) {
+			limiter := limiter.GetLimiter(c.Request.RemoteAddr)
+			if !limiter.Allow() {
+				c.AbortWithStatus(http.StatusTooManyRequests)
+				return
+			}
 			c.Next()
 		},
 	}
