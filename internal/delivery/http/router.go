@@ -11,17 +11,28 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/wagaru/recodar-rest/internal/config"
 	"github.com/wagaru/recodar-rest/internal/domain"
+	"github.com/wagaru/recodar-rest/internal/logger"
 )
 
 type Router struct {
 	*gin.Engine
-	Middlewares map[string]gin.HandlerFunc
+	Middlewares       map[string]gin.HandlerFunc
+	connectionLimiter *ConnectionLimiter
+}
+
+func (router *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if !router.connectionLimiter.GetConnection() {
+		return
+	}
+	defer router.connectionLimiter.ReleaseConnection()
+	router.Engine.ServeHTTP(w, r)
 }
 
 func NewRouter(config *config.Config) *Router {
 	router := &Router{
 		gin.Default(),
 		newMiddlewares(config),
+		newConnectionLimiter(100),
 	}
 	router.Use(cors.New(newCorsConfig()))
 	router.Use(sessions.Sessions("mysession", cookie.NewStore([]byte(config.SessionSecret))))
@@ -38,7 +49,7 @@ func newCorsConfig() cors.Config {
 	return config
 }
 
-var limiter = NewRateLimiters(5, 10)
+var limiter = NewRateLimiters(1, 1)
 
 func newMiddlewares(config *config.Config) map[string]gin.HandlerFunc {
 	return map[string]gin.HandlerFunc{
@@ -69,6 +80,7 @@ func newMiddlewares(config *config.Config) map[string]gin.HandlerFunc {
 			limiter := limiter.GetLimiter(c.Request.RemoteAddr)
 			if !limiter.Allow() {
 				c.AbortWithStatus(http.StatusTooManyRequests)
+				logger.Logger.Print("Too many Requests")
 				return
 			}
 			c.Next()

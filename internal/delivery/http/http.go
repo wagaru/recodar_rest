@@ -2,8 +2,10 @@ package http
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/wagaru/recodar-rest/internal/config"
+	"github.com/wagaru/recodar-rest/internal/logger"
 	"github.com/wagaru/recodar-rest/internal/usecase"
 )
 
@@ -50,5 +52,6 @@ func (delivery *httpDelivery) buildRoute() {
 
 func (delivery *httpDelivery) Run(port uint16) {
 	delivery.buildRoute()
-	delivery.router.Run(fmt.Sprintf(":%v", port))
+	logger.Logger.Printf("Listening and serving HTTP on %v", port)
+	http.ListenAndServe(fmt.Sprintf(":%v", port), delivery.router)
 }
