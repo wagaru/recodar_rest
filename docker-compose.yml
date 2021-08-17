@@ -10,3 +10,14 @@ services:
         environment: 
             SWAGGER_JSON: '/tmp/swagger.yml'
             BASE_URL: '/swagger'
+    rabbitmq:
+        image: rabbitmq:management
+        ports:
+            - "15672:15672"
+            - "5672:5672"
+        restart: always
+        container_name: "rabbitmq"
+        environment:
+            - RABBITMQ_NODENAME=rabbit@rabbitmq
+        volumes:
+            - ./rabbitmq:/var/lib/rabbitmq
