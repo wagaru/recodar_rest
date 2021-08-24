@@ -1,25 +1,30 @@
 package http
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/wagaru/recodar-rest/internal/config"
+	"github.com/wagaru/recodar-rest/internal/domain"
 	"github.com/wagaru/recodar-rest/internal/logger"
 	"github.com/wagaru/recodar-rest/internal/usecase"
 )
 
 type httpDelivery struct {
-	usecase usecase.Usecase
-	router  *Router
-	config  *config.Config
+	usecase              usecase.Usecase
+	messageBrokerUsecase usecase.MessageBrokerUsecase
+	router               *Router
+	config               *config.Config
 }
 
-func NewHttpDelivery(usecase usecase.Usecase, config *config.Config) *httpDelivery {
+func NewHttpDelivery(usecase usecase.Usecase, messageBrokerUsecase usecase.MessageBrokerUsecase, config *config.Config) *httpDelivery {
 	return &httpDelivery{
-		usecase: usecase,
-		router:  NewRouter(config),
-		config:  config,
+		usecase:              usecase,
+		messageBrokerUsecase: messageBrokerUsecase,
+		router:               NewRouter(config),
+		config:               config,
 	}
 }
 
@@ -48,10 +53,32 @@ func (delivery *httpDelivery) buildRoute() {
 
 	// for test only
 	// delivery.router.GET("genTest", delivery.genTestAccidents)
+	delivery.router.GET("test", delivery.test)
 }
 
 func (delivery *httpDelivery) Run(port uint16) {
 	delivery.buildRoute()
 	logger.Logger.Printf("Listening and serving HTTP on %v", port)
 	http.ListenAndServe(fmt.Sprintf(":%v", port), delivery.router)
+}
+
+func (delivery *httpDelivery) test(c *gin.Context) {
+	message := domain.MessageUserLogin{
+		ID: "123456",
+	}
+	messageEncoded, err := json.Marshal(message)
+	if err != nil {
+		logger.Logger.Printf("Encode message failed:%v", err)
+		return
+	}
+	meta := &domain.RabbitMQMeta{
+		ExchangeType: "fanout",
+		ExchangeName: "fanout",
+	}
+	err = delivery.messageBrokerUsecase.SendMessages(meta, messageEncoded)
+	if err != nil {
+		logger.Logger.Printf("send message failed:%v", err)
+		return
+	}
+	c.String(200, "OK")
 }

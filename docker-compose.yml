@@ -21,3 +21,14 @@ services:
             - RABBITMQ_NODENAME=rabbit@rabbitmq
         volumes:
             - ./rabbitmq:/var/lib/rabbitmq
+        # healthcheck:
+        #     test: ["CMD", "curl", "-f", "http://localhost:5672"]
+        #     interval: 5s #每幾秒重試一次
+        #     timeout: 10s #每次重試的 timeout
+        #     retries: 3 #重試幾次失敗就視為 unhealthy
+    # server:
+    #     build: .
+    #     ports:
+    #         - 9999:9999
+    #     depends_on:
+    #         - rabbitmq

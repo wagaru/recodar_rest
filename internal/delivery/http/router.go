@@ -49,7 +49,7 @@ func newCorsConfig() cors.Config {
 	return config
 }
 
-var limiter = NewRateLimiters(1, 1)
+var limiter = NewRateLimiters(10, 100)
 
 func newMiddlewares(config *config.Config) map[string]gin.HandlerFunc {
 	return map[string]gin.HandlerFunc{
