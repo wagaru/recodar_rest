@@ -19,6 +19,10 @@ type Config struct {
 	LineLoginClientSecret  string `mapstructure:"LINE_LOGIN_CLIENT_SECRET"`
 	LineLoginRedirectURL   string `mapstructure:"LINE_LOGIN_REDIRECT_URL"`
 	JwtSecret              string `mapstructure:"JWT_SECRET"`
+	RabbitMQUserName       string `mapstructure:"RABBIT_MQ_USER_NAME"`
+	RabbitMQPassword       string `mapstructure:"RABBIT_MQ_PASSWORD"`
+	RabbitMQHost           string `mapstructure:"RABBIT_MQ_HOST"`
+	RabbitMQPort           string `mapstructure:"RABBIT_MQ_PORT"`
 }
 
 func LoadConfig(path, configName, configType string) (*Config, error) {

@@ -163,6 +163,8 @@ func (delivery *httpDelivery) authLineCallback(c *gin.Context) {
 	WrapResponse(c, SuccessResponse{data: map[string]interface{}{
 		"token": jwtToken,
 	}})
+
+	delivery.afterAuth(user)
 }
 
 func (delivery *httpDelivery) authGoogle(c *gin.Context) {
@@ -250,6 +252,8 @@ func (delivery *httpDelivery) authGoogleCallback(c *gin.Context) {
 	WrapResponse(c, SuccessResponse{data: map[string]interface{}{
 		"token": jwtToken,
 	}})
+
+	delivery.afterAuth(user)
 }
 
 func (delivery *httpDelivery) getGoogleOauthConfig() *oauth2.Config {
@@ -262,5 +266,41 @@ func (delivery *httpDelivery) getGoogleOauthConfig() *oauth2.Config {
 			"https://www.googleapis.com/auth/userinfo.profile",
 		},
 		Endpoint: google.Endpoint,
+	}
+}
+
+func (delivery *httpDelivery) afterAuth(user *domain.User) {
+	// send message to message broker
+	message := domain.MessageUserLogin{
+		ID:     user.ID.Hex(),
+		Source: user.BindingSource,
+	}
+	messageEncoded, err := json.Marshal(message)
+	if err != nil {
+		log.Printf("Encode message failed:%v", err)
+		return
+	}
+
+	// fanout exchange
+	meta := &domain.RabbitMQMeta{
+		ExchangeType: "fanout",
+		ExchangeName: "fanout",
+	}
+	err = delivery.messageBrokerUsecase.SendMessages(meta, messageEncoded)
+	if err != nil {
+		log.Printf("send message failed, meta: %v, err: %v", meta, err)
+		return
+	}
+
+	// direct exchange
+	meta = &domain.RabbitMQMeta{
+		ExchangeType: "direct",
+		ExchangeName: "userAuth",
+		RoutingKey:   user.BindingSource,
+	}
+	err = delivery.messageBrokerUsecase.SendMessages(meta, messageEncoded)
+	if err != nil {
+		log.Printf("send message failed, meta: %v, err:%v", meta, err)
+		return
 	}
 }
